@@ -6,6 +6,8 @@ import chromedriver_autoinstaller
 from datetime import datetime
 from os import makedirs, path
 import sqlite3
+from os import environ
+import googlemaps
 
 class WebDriver(Chrome):
     def __init__(self, headless=True, log_folder="logs"):
@@ -52,6 +54,8 @@ class SubwayDB:
             ('outlet_address', 'TEXT'),
             ('outlet_hours', 'TEXT'),
             ('outlet_waze', 'TEXT')
+            ('outlet_latitude', 'REAL')
+            ('outlet_longitude', 'REAL')
         ]
         self.outlet_primary_key = ('outlet_id', 'INTEGER')
         if not self.table_exists(self.outlet_table):
@@ -96,4 +100,10 @@ def getOutletInfo(webElem, xp_outlet_name, xp_info_list, xp_waze_link):
         else:
             outlet_hours.append(e.text)
     outlet_waze = webElem.find_element(By.XPATH, xp_waze_link).get_attribute('href')
-    return outlet_name, outlet_address, '\n'.join(outlet_hours), outlet_waze
+    gmaps = googlemaps.Client(key=environ.get("GOOGLE_MAPS_API_KEY"))
+    return outlet_name, outlet_address, '\n'.join(outlet_hours), outlet_waze, outlet_latitude, outlet_longitude
+
+
+def getGeocode(address):
+    gmaps = googlemaps.Client(key=environ.get("GOOGLE_MAPS_API_KEY"))
+    return gmaps.geocode(address)
